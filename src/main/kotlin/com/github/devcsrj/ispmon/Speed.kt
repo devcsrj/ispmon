@@ -1,6 +1,6 @@
 package com.github.devcsrj.ispmon
 
-import java.util.concurrent.TimeUnit
+import java.time.Duration
 
 /**
  * Speed, such as 24MB/s
@@ -8,5 +8,13 @@ import java.util.concurrent.TimeUnit
 data class Speed(
 
   val size: DataSize,
-  val time: TimeUnit
-)
+  val time: Duration
+) {
+
+  /**
+   * The value in MB/s
+   */
+  fun value(): Float {
+    return size.toMegabytes().toFloat() / time.seconds
+  }
+}
