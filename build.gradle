@@ -24,8 +24,6 @@ ext {
 }
 
 dependencies {
-  compileOnly("com.oracle.substratevm:svm:19.2.0")
-
   implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
   implementation("io.vertx:vertx-core:$vertxVersion")
   implementation("io.vertx:vertx-lang-kotlin:$vertxVersion")
