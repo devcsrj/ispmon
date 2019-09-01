@@ -36,14 +36,13 @@ module.exports = {
   },
   entry: './src/index.js',
   output: {
-    path: path.resolve('dist', 'static'),
     filename: 'main.js',
     publicPath: 'static'
   },
   plugins: [
     new HtmlWebpackPlugin({
       template: "./src/index.html",
-      filename: path.resolve('dist', 'index.html'),
+      filename: "index.html"
     })
   ]
 };
