@@ -42,7 +42,8 @@ class Server : AbstractVerticle() {
     mapper = ObjectMapper()
     mapper.registerModule(KotlinModule())
 
-    val monitorInterval = config().getLong("MONITOR_INTERVAL", 30L)
+    val monitorInterval = config().getLong("ISPMON_INTERVAL", 30L)
+    logger.info("Speedtest will be done every $monitorInterval minute(s)")
     scheduler = Executors.newSingleThreadScheduledExecutor()
     scheduler.scheduleWithFixedDelay(
       speedtest(), 0L, monitorInterval, TimeUnit.MINUTES
