@@ -79,7 +79,7 @@ class Server : AbstractVerticle() {
         LocalDate.parse(it.iterator().next(), pattern)
       }
     }
-    val pattern = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
+    val pattern = DateTimeFormatter.ofPattern("hh:mm a")
     val results = repo.findSince(since)
       .map {
         mapOf(
