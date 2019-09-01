@@ -69,6 +69,13 @@ tasks {
     }
   }
 
+  run {
+    args = ['run', mainVerticleName,
+            "--redeploy=$watchForChange",
+            "--launcher-class=$mainClassName",
+            "--on-redeploy=$doOnChange"]
+  }
+
   shadowJar {
     classifier = 'fat'
     manifest {
