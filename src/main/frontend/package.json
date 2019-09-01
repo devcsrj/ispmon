@@ -1,0 +1,39 @@
+{
+  "name": "ispmon",
+  "version": "1.0.0",
+  "description": "Your ISP bandwidth monitor",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "webpack-dev-server --open --mode development",
+    "build": "webpack --mode production",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/devcsrj/ispmon.git"
+  },
+  "author": "Reijhanniel Jearl Campos",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/devcsrj/ispmon/issues"
+  },
+  "homepage": "https://github.com/devcsrj/ispmon#readme",
+  "devDependencies": {
+    "@babel/core": "^7.5.5",
+    "@babel/plugin-transform-runtime": "^7.5.5",
+    "@babel/preset-env": "^7.5.5",
+    "@babel/preset-react": "^7.0.0",
+    "babel-loader": "^8.0.6",
+    "html-loader": "^0.5.5",
+    "html-webpack-plugin": "^3.2.0",
+    "webpack": "^4.39.3",
+    "webpack-cli": "^3.3.7",
+    "webpack-dev-server": "^3.8.0"
+  },
+  "dependencies": {
+    "date-fns": "^2.0.1",
+    "react": "^16.9.0",
+    "react-dom": "^16.9.0",
+    "recharts": "^1.7.1"
+  }
+}

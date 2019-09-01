@@ -59,7 +59,15 @@ class Server : AbstractVerticle() {
         LocalDate.parse(it.iterator().next(), pattern)
       }
     }
+    val pattern = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
     val results = repo.findSince(since)
+      .map {
+        mapOf(
+          "timestamp" to it.timestamp.format(pattern),
+          "upload" to it.upload.value(),
+          "download" to it.download.value()
+        )
+      }
     context
       .response()
       .end(mapper.writeValueAsString(results))
