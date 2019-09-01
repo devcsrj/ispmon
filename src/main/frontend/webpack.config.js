@@ -1,8 +1,9 @@
 const HtmlWebPackPlugin = require("html-webpack-plugin");
+const path = require('path');
 
 module.exports = {
-  devtool: 'source-map',
   devServer: {
+    contentBase: 'dist',
     proxy: {
       '/results': 'http://localhost:8080'
     }
@@ -26,10 +27,16 @@ module.exports = {
       }
     ]
   },
+  entry: './src/index.js',
+  output: {
+    path: path.resolve('dist', 'static'),
+    filename: 'main.js',
+    publicPath: 'static'
+  },
   plugins: [
     new HtmlWebPackPlugin({
-      template: "src/index.html",
-      filename: "index.html"
+      template: "./src/index.html",
+      filename: path.resolve('dist', 'index.html'),
     })
   ]
 };

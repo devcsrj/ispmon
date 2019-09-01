@@ -4,7 +4,7 @@
   "description": "Your ISP bandwidth monitor",
   "main": "src/index.js",
   "scripts": {
-    "start": "webpack-dev-server --open --mode development",
+    "start": "webpack-dev-server --open --mode development --content-base",
     "build": "webpack --mode production",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
