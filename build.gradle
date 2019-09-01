@@ -3,6 +3,7 @@ plugins {
   id "com.github.johnrengelman.shadow" version "4.0.3"
   id "org.jetbrains.kotlin.jvm" version "1.3.50"
   id "com.moowork.node" version "1.2.0"
+  id 'com.palantir.docker' version '0.22.1'
 }
 
 repositories {
@@ -76,6 +77,15 @@ tasks {
     mergeServiceFiles {
       include 'META-INF/services/io.vertx.core.spi.VerticleFactory'
     }
+  }
+
+  docker {
+    name "devcsrj/ispmon:${version}"
+    files shadowJar.outputs.files.singleFile
+    buildArgs([
+      'VERTICLE_NAME': "$mainVerticleName",
+      'VERTICLE_FILE': shadowJar.outputs.files.singleFile.name
+    ])
   }
 
   node {
