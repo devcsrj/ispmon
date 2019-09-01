@@ -27,7 +27,7 @@ internal class UploadTest(private val server: Server,
 
   private fun upload(url: URL, endTime: LocalTime): Long {
     var bytes = 0L
-    val buffer = ByteArray(32 * 1024)
+    val buffer = ByteArray(128 * 1024)
     val size = buffer.size
     while (true) {
       if (LocalTime.now().isAfter(endTime))
@@ -42,9 +42,11 @@ internal class UploadTest(private val server: Server,
         DataOutputStream(connection.outputStream).use {
           it.write(buffer, 0, size)
           it.flush()
-          bytes += size
-        }
 
+          val code = connection.responseCode
+          if (code == 200)
+            bytes += size
+        }
       } finally {
         connection.disconnect()
       }

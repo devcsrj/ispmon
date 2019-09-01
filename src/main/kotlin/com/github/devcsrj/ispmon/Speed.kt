@@ -3,7 +3,7 @@ package com.github.devcsrj.ispmon
 import java.time.Duration
 
 /**
- * Speed, such as 24MB/s
+ * Speed, such as 24Mbps
  */
 data class Speed(
 
@@ -12,9 +12,10 @@ data class Speed(
 ) {
 
   /**
-   * The value in MB/s
+   * The value in Mbps
    */
   fun value(): Float {
-    return size.toMegabytes().toFloat() / time.seconds
+    val megabit = size.toMegabytes() * 8
+    return megabit.toFloat() / time.seconds
   }
 }

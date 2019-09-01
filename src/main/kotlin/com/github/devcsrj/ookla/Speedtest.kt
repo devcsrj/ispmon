@@ -40,11 +40,11 @@ class Speedtest(private val timeout: Duration) : Callable<Result> {
 
     logger.debug("Starting download...")
     val downloadSpeed = DownloadTest(server, timeout).call()
-    logger.info("🔽 ${downloadSpeed.value()} MB/s")
+    logger.info("🔽 ${downloadSpeed.value()} Mbps")
 
     logger.debug("Starting upload...")
     val uploadSpeed = UploadTest(server, timeout).call()
-    logger.info("⬆️ ${uploadSpeed.value()} MB/s")
+    logger.info("⬆️ ${uploadSpeed.value()} Mbps")
 
     return Result(
       timestamp = LocalDateTime.now(),
