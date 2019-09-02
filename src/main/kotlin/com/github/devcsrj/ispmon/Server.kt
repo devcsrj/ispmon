@@ -3,6 +3,7 @@ package com.github.devcsrj.ispmon
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.github.devcsrj.ookla.Speedtest
+import io.vertx.config.ConfigRetriever
 import io.vertx.core.AbstractVerticle
 import io.vertx.core.Context
 import io.vertx.core.Future
@@ -42,12 +43,8 @@ class Server : AbstractVerticle() {
     mapper = ObjectMapper()
     mapper.registerModule(KotlinModule())
 
-    val monitorInterval = config().getLong("ISPMON_INTERVAL", 30L)
-    logger.info("Speedtest will be done every $monitorInterval minute(s)")
-    scheduler = Executors.newSingleThreadScheduledExecutor()
-    scheduler.scheduleWithFixedDelay(
-      speedtest(), 0L, monitorInterval, TimeUnit.MINUTES
-    )
+    val monitorInterval = config()
+
   }
 
   override fun stop() {
@@ -55,6 +52,29 @@ class Server : AbstractVerticle() {
   }
 
   override fun start(future: Future<Void>) {
+    val retriever = ConfigRetriever.create(vertx)
+    retriever.getConfig { config ->
+      val result = config.result()
+      config.map {
+        val port = result.getInteger("ISPMON_PORT", 5000)
+        startServer(port)
+
+        val monitorInterval = result.getLong("ISPMON_INTERVAL", 30L)
+        startScheduler(monitorInterval)
+      }
+    }
+  }
+
+  private fun startScheduler(monitorInterval: Long) {
+    logger.info("Speedtest will be done every $monitorInterval minute(s)")
+    scheduler = Executors.newSingleThreadScheduledExecutor()
+    scheduler.scheduleWithFixedDelay(
+      speedtest(), 0L, monitorInterval, TimeUnit.MINUTES
+    )
+  }
+
+  private fun startServer(port: Int) {
+    logger.info("Server running at $port")
     val router = Router.router(vertx).apply {
       route(HttpMethod.GET, "/static/*")
         .handler(StaticHandler.create("static"))
@@ -68,7 +88,7 @@ class Server : AbstractVerticle() {
 
     vertx.createHttpServer()
       .requestHandler(router)
-      .listen(8080)
+      .listen(port)
   }
 
   private fun getResults(context: RoutingContext) {
