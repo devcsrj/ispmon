@@ -13,11 +13,11 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 
 @ExtendWith(VertxExtension::class)
-internal class ServerTest {
+internal class IspmonTest {
 
   @BeforeEach
   fun prepare(vertx: Vertx, testContext: VertxTestContext) {
-    vertx.deployVerticle(Server::class.java.name,
+    vertx.deployVerticle(Ispmon::class.java.name,
       testContext.succeeding<String> { id -> testContext.completeNow() })
   }
 

@@ -23,9 +23,9 @@ import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
 
-class Server : AbstractVerticle() {
+class Ispmon : AbstractVerticle() {
 
-  private val logger = LoggerFactory.getLogger(Server::class.java)
+  private val logger = LoggerFactory.getLogger(Ispmon::class.java)
   private val timeout = Duration.ofSeconds(15)
 
   private lateinit var repo: ResultRepository
@@ -42,9 +42,6 @@ class Server : AbstractVerticle() {
 
     mapper = ObjectMapper()
     mapper.registerModule(KotlinModule())
-
-    val monitorInterval = config()
-
   }
 
   override fun stop() {
@@ -128,5 +125,5 @@ class Server : AbstractVerticle() {
 }
 
 fun main() {
-  Launcher.executeCommand("run", Server::class.java.name)
+  Launcher.executeCommand("run", Ispmon::class.java.name)
 }

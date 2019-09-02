@@ -20,7 +20,7 @@ ext {
   spekVersion = "2.0.6"
   vertxVersion = "3.8.1"
 
-  mainVerticleName = "com.github.devcsrj.ispmon.Server"
+  mainVerticleName = "com.github.devcsrj.ispmon.Ispmon"
   watchForChange = "src/**/*.kt"
   doOnChange = "${projectDir}/gradlew classes"
 }
