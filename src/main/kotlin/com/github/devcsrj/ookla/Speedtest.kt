@@ -64,21 +64,20 @@ class Speedtest(private val timeout: Duration) : Callable<Result> {
 
       val doc = connection.inputStream.use { `$`(it) }
       val matches = doc.xpath("/settings/servers").children()
-      return sequence {
-        for (match in matches) {
-          yield(Server(
-            uploadUrl = URI.create(match.getAttribute("url")),
+      return matches.asSequence()
+        .map {
+          Server(
+            uploadUrl = URI.create(it.getAttribute("url")),
             location = Location(
-              latitude = match.getAttribute("lat").toDouble(),
-              longitude = match.getAttribute("lon").toDouble()
+              latitude = it.getAttribute("lat").toDouble(),
+              longitude = it.getAttribute("lon").toDouble()
             ),
-            countryName = match.getAttribute("name"),
-            countryCode = match.getAttribute("cc"),
-            sponsor = match.getAttribute("sponsor"),
-            host = match.getAttribute("host")
-          ))
+            countryName = it.getAttribute("name"),
+            countryCode = it.getAttribute("cc"),
+            sponsor = it.getAttribute("sponsor"),
+            host = it.getAttribute("host")
+          )
         }
-      }
     } finally {
       connection.disconnect()
     }
