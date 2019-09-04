@@ -2,14 +2,12 @@ package com.github.devcsrj.ookla
 
 import com.github.devcsrj.ispmon.Result
 import io.vertx.core.logging.LoggerFactory
-import org.joox.JOOX.`$`
 import java.net.HttpURLConnection
-import java.net.InetAddress
 import java.net.URI
-import java.net.URL
 import java.time.Duration
 import java.time.LocalDateTime
 import java.util.concurrent.Callable
+import kotlin.streams.toList
 
 
 /**
@@ -18,7 +16,11 @@ import java.util.concurrent.Callable
  * @see <a href="https://www.speedtest.net">speedtest.net</a>
  * @author devcsrj
  */
-class Speedtest(private val timeout: Duration) : Callable<Result> {
+class Speedtest(
+  private val baseUrl: URI,
+  private val timeout: Duration) : Callable<Result> {
+
+  constructor(timeout: Duration) : this(URI.create("https://www.speedtest.net"), timeout)
 
   private val logger = LoggerFactory.getLogger(Speedtest::class.java)
 
@@ -53,8 +55,8 @@ class Speedtest(private val timeout: Duration) : Callable<Result> {
     )
   }
 
-  private fun loadServers(): Sequence<Server> {
-    val url = URL("https://www.speedtest.net/speedtest-servers-static.php")
+  internal fun loadServers(): Sequence<Server> {
+    val url = baseUrl.resolve("/speedtest-servers-static.php").toURL()
     val connection = url.openConnection() as HttpURLConnection
     val code = connection.responseCode
     try {
@@ -62,29 +64,32 @@ class Speedtest(private val timeout: Duration) : Callable<Result> {
         "Could not fetch configuration, server responded with $code"
       }
 
-      val doc = connection.inputStream.use { `$`(it) }
-      val matches = doc.xpath("/settings/servers").children()
-      return matches.asSequence()
-        .map {
-          Server(
-            uploadUrl = URI.create(it.getAttribute("url")),
-            location = Location(
-              latitude = it.getAttribute("lat").toDouble(),
-              longitude = it.getAttribute("lon").toDouble()
-            ),
-            countryName = it.getAttribute("name"),
-            countryCode = it.getAttribute("cc"),
-            sponsor = it.getAttribute("sponsor"),
-            host = it.getAttribute("host")
-          )
-        }
+      val results = connection.inputStream.use { src ->
+        src.bufferedReader().lines()
+          .filter { it.contains("<server ") }
+          .map { Util.mapFromAttributeLine(it) }
+          .map {
+            Server(
+              uploadUrl = URI.create(it["url"]!!),
+              location = Location(
+                latitude = it["lat"]!!.toDouble(),
+                longitude = it["lon"]!!.toDouble()
+              ),
+              countryName = it["country"]!!,
+              countryCode = it["cc"]!!,
+              sponsor = it["sponsor"]!!,
+              host = it["host"]!!
+            )
+          }.toList()
+      }
+      return results.asSequence()
     } finally {
       connection.disconnect()
     }
   }
 
-  private fun loadSettings(): Settings {
-    val url = URL("https://www.speedtest.net/speedtest-config.php")
+  internal fun loadSettings(): Settings {
+    val url = baseUrl.resolve("/speedtest-config.php").toURL()
     val connection = url.openConnection() as HttpURLConnection
     val code = connection.responseCode
     try {
@@ -92,17 +97,26 @@ class Speedtest(private val timeout: Duration) : Callable<Result> {
         "Could not fetch configuration, server responded with $code"
       }
 
-      val doc = connection.inputStream.use { `$`(it) }
-      val client = doc.xpath("/settings/client")
-      return Settings(
-        address = InetAddress.getByName(client.attr("ip")),
-        location = Location(
-          latitude = client.attr("lat").toDouble(),
-          longitude = client.attr("lon").toDouble()
-        ),
-        isp = client.attr("isp"),
-        countryCode = client.attr("country")
-      )
+      return connection.inputStream.use { src ->
+        src.bufferedReader().lines()
+          .filter { it.contains("<client ") }
+          .map { Util.mapFromAttributeLine(it) }
+          .findFirst()
+          .orElseThrow {
+            throw IllegalArgumentException("Could not fetch xml node " +
+              "'/settings/client' from $url")
+          }
+      }.let {
+        Settings(
+          address = it["ip"]!!,
+          location = Location(
+            latitude = it["lat"]!!.toDouble(),
+            longitude = it["lon"]!!.toDouble()
+          ),
+          isp = it["isp"]!!,
+          countryCode = it["country"]!!
+        )
+      }
     } finally {
       connection.disconnect()
     }
