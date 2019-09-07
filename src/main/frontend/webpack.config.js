@@ -3,9 +3,10 @@ const path = require('path');
 
 module.exports = {
   devServer: {
+    port: 5001,
     contentBase: 'dist',
     proxy: {
-      '/results': 'http://localhost:8080'
+      '/results': 'http://localhost:5000'
     }
   },
   module: {

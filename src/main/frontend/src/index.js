@@ -1,8 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import SpeedtestChart from './SpeedtestChart.jsx'
-import 'skeleton-css/css/skeleton.css'
+import App from './App.jsx';
 
 ReactDOM.render(
-  <SpeedtestChart/>,
-  document.getElementById('speedtest-chart'));
+  <App/>,
+  document.getElementById('app'));
