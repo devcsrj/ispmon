@@ -22,16 +22,16 @@ object DiskResultRepositoryTest : Spek({
       val f1 = tmpDir.resolve("2019-08-29.csv")
       Files.newBufferedWriter(f1).use {
         it.write("""
-      11:30:00,${16 * 1024 * 1024},1,${8 * 1024 * 1024},1
-      12:00:01,${12 * 1024 * 1024},1,${8 * 1024 * 1024},1
-      12:30:02,${16 * 1024 * 1024},1,${8 * 1024 * 1024},1
+      11:30:00,192.168.0.1,Gov,${16 * 1024 * 1024},1,${8 * 1024 * 1024},1
+      12:00:01,192.168.0.1,Gov,${12 * 1024 * 1024},1,${8 * 1024 * 1024},1
+      12:30:02,192.168.0.1,Gov,${16 * 1024 * 1024},1,${8 * 1024 * 1024},1
       
       """.trimIndent())
       }
       val f2 = tmpDir.resolve("2019-08-30.csv")
       Files.newBufferedWriter(f2).use {
         it.write("""
-      17:15:02,${5 * 1024 * 1024},1,${11 * 1024 * 1024},1
+      17:15:02,192.168.0.1,Gov,${5 * 1024 * 1024},1,${11 * 1024 * 1024},1
       
       """.trimIndent())
       }
@@ -42,6 +42,8 @@ object DiskResultRepositoryTest : Spek({
       val actual = results.iterator().next()
       assertEquals(actual, Result(
         timestamp = LocalDateTime.of(2019, 8, 30, 17, 15, 2),
+        ip = "192.168.0.1",
+        isp = "Gov",
         upload = Speed(DataSize.ofMegabytes(5), Duration.ofSeconds(1L)),
         download = Speed(DataSize.ofMegabytes(11), Duration.ofSeconds(1L))
       ))
@@ -55,11 +57,15 @@ object DiskResultRepositoryTest : Spek({
     it("should save results") {
       repo.save(Result(
         timestamp = LocalDateTime.of(2019, 6, 1, 17, 15, 2),
+        ip = "192.168.0.1",
+        isp = "Gov",
         upload = Speed(DataSize.ofMegabytes(5), Duration.ofSeconds(2L)),
         download = Speed(DataSize.ofMegabytes(11), Duration.ofSeconds(2L))
       ))
       repo.save(Result(
         timestamp = LocalDateTime.of(2019, 6, 1, 17, 45, 18),
+        ip = "192.168.0.1",
+        isp = "Gov",
         upload = Speed(DataSize.ofMegabytes(25), Duration.ofSeconds(2L)),
         download = Speed(DataSize.ofMegabytes(30), Duration.ofSeconds(2L))
       ))
@@ -67,8 +73,8 @@ object DiskResultRepositoryTest : Spek({
       val file = tmpDir.resolve("2019-06-01.csv")
       val actual = Files.newBufferedReader(file).readText()
       assertEquals("""
-      17:15:02,${5 * 1024 * 1024},2,${11 * 1024 * 1024},2
-      17:45:18,${25 * 1024 * 1024},2,${30 * 1024 * 1024},2
+      17:15:02,192.168.0.1,Gov,${5 * 1024 * 1024},2,${11 * 1024 * 1024},2
+      17:45:18,192.168.0.1,Gov,${25 * 1024 * 1024},2,${30 * 1024 * 1024},2
       
       """.trimIndent(), actual)
     }

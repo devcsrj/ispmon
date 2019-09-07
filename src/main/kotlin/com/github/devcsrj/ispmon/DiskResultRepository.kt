@@ -15,7 +15,7 @@ import java.time.format.DateTimeFormatter
  * Results are stored in a CSV, whose name matches the current date.
  * Each line in the file is stored in the form of:
  * ```
- * HH:mm:ss,uploaded_bytes,duration,downloaded_bytes,duration
+ * HH:mm:ss,ip,isp,uploaded_bytes,duration,downloaded_bytes,duration
  * ```
  *
  */
@@ -36,11 +36,13 @@ class DiskResultRepository(private val dir: Path) : ResultRepository {
       StandardOpenOption.CREATE,
       StandardOpenOption.APPEND).use {
       val c1 = timePattern.format(result.timestamp.toLocalTime())
-      val c2 = result.upload.size.toBytes()
-      val c3 = result.upload.time.seconds
-      val c4 = result.download.size.toBytes()
-      val c5 = result.download.time.seconds
-      it.write("$c1,$c2,$c3,$c4,$c5")
+      val c2 = result.ip
+      val c3 = result.isp
+      val c4 = result.upload.size.toBytes()
+      val c5 = result.upload.time.seconds
+      val c6 = result.download.size.toBytes()
+      val c7 = result.download.time.seconds
+      it.write("$c1,$c2,$c3,$c4,$c5,$c6,$c7")
       it.write(System.lineSeparator())
     }
   }
@@ -61,16 +63,20 @@ class DiskResultRepository(private val dir: Path) : ResultRepository {
       Files.newBufferedReader(file).forEachLine {
         val tokens = it.split(",")
         val time = LocalTime.parse(tokens[0], timePattern)
+        val ip = tokens[1]
+        val isp = tokens[2]
         val upload = Speed(
-          size = DataSize.ofBytes(tokens[1].toLong()),
-          time = Duration.ofSeconds(tokens[2].toLong())
-        )
-        val download = Speed(
           size = DataSize.ofBytes(tokens[3].toLong()),
           time = Duration.ofSeconds(tokens[4].toLong())
         )
+        val download = Speed(
+          size = DataSize.ofBytes(tokens[5].toLong()),
+          time = Duration.ofSeconds(tokens[6].toLong())
+        )
         results.add(Result(
           timestamp = LocalDateTime.of(current, time),
+          ip = ip,
+          isp = isp,
           upload = upload,
           download = download
         ))

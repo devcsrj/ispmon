@@ -27,6 +27,7 @@ class Speedtest(
   override fun call(): Result {
     logger.debug("Loading speedtest settings...")
     val settings = loadSettings()
+    logger.info("ISP: ${settings.isp} - ${settings.address}")
 
     logger.debug("Finding the best server...")
     val closest = loadServers()
@@ -38,7 +39,7 @@ class Speedtest(
     }
 
     val server = closest.value.iterator().next()
-    logger.info("Server: ${server.sponsor} - ${server.host}")
+    logger.info("Speedtest server: ${server.sponsor} - ${server.host}")
 
     logger.debug("Starting download...")
     val downloadSpeed = DownloadTest(server, timeout).call()
@@ -50,6 +51,8 @@ class Speedtest(
 
     return Result(
       timestamp = LocalDateTime.now(),
+      ip = settings.address,
+      isp = settings.isp,
       download = downloadSpeed,
       upload = uploadSpeed
     )

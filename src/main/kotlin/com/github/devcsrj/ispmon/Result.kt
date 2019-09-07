@@ -8,6 +8,8 @@ import java.time.LocalDateTime
 data class Result(
 
   val timestamp: LocalDateTime,
+  val isp: String,
+  val ip: String,
   val download: Speed,
   val upload: Speed
 )
