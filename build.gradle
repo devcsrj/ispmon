@@ -26,6 +26,13 @@ ext {
   mainVerticleName = "com.github.devcsrj.ispmon.Ispmon"
   watchForChange = "src/**/*.kt"
   doOnChange = "${projectDir}/gradlew classes"
+
+  nativeImageArgs = [
+    "--report-unsupported-elements-at-runtime",
+    "--allow-incomplete-classpath",
+    "-J-Djava.security.properties=java.security",
+    "--no-server",
+  ]
 }
 
 dependencies {
@@ -97,15 +104,6 @@ tasks {
     }
   }
 
-  docker {
-    name "devcsrj/ispmon:${version}"
-    files shadowJar.outputs.files.singleFile
-    buildArgs([
-      'VERTICLE_NAME': "$mainVerticleName",
-      'VERTICLE_FILE': shadowJar.outputs.files.singleFile.name
-    ])
-  }
-
   node {
     version = '8.11.1'
     yarnVersion = '1.12.3'
@@ -122,16 +120,44 @@ tasks {
   build.dependsOn yarn_build
 
   task nativeImage(type: Exec) {
+    group = "build"
+    description = "Compiles a native image for your operating system"
     commandLine = "native-image"
-    args = [
-      "--report-unsupported-elements-at-runtime",
-      "--allow-incomplete-classpath",
-      "-J-Djava.security.properties=java.security",
-      "--no-server",
+    args = nativeImageArgs + [
       "-jar",
-      shadowJar.outputs.files.singleFile
-      ]
+      shadowJar.outputs.files.singleFile,
+      "ispmon"
+    ]
+    dependsOn(shadowJar)
+    doLast {
+      logger.info("You can now execute: ./ispmon")
+    }
   }
 
-  nativeImage.dependsOn shadowJar
+  task staticNativeImage(type: Exec) {
+    group = "build"
+    description = "Builds a unix-compatible native image"
+    commandLine = "docker"
+    args = [
+      "run",
+      "-v",
+      "${shadowJar.outputs.files.singleFile.parent}:/project",
+      "--rm",
+      "devcsrj/graal-native-image:$graalVersion",
+    ] + nativeImageArgs + [
+      "--static",
+      "-jar",
+      shadowJar.outputs.files.singleFile.name,
+      "ispmon"
+    ]
+    dependsOn(shadowJar)
+  }
+
+  docker {
+    name "devcsrj/ispmon:${version}"
+    dockerfile file("src/bin/launcher/Dockerfile")
+    files file(shadowJar.outputs.files.singleFile.parent + "/ispmon")
+
+    dependsOn(staticNativeImage)
+  }
 }
