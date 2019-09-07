@@ -56,7 +56,7 @@ class Ispmon : AbstractVerticle() {
         val port = result.getInteger("ISPMON_PORT", 5000)
         startServer(port)
 
-        val monitorInterval = result.getLong("ISPMON_INTERVAL", 30L)
+        val monitorInterval = result.getLong("ISPMON_INTERVAL", 15L)
         startScheduler(monitorInterval)
       }
     }
