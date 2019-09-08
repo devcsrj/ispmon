@@ -3,6 +3,7 @@ plugins {
   id "com.github.johnrengelman.shadow" version "4.0.3"
   id "org.jetbrains.kotlin.jvm" version "1.3.50"
   id "com.moowork.node" version "1.2.0"
+  id "com.github.hierynomus.license" version "0.15.0"
 }
 
 repositories {
@@ -88,6 +89,21 @@ tasks {
     }
   }
 
+  license {
+    header rootProject.file('LICENSE')
+    mapping("kt", "JAVADOC_STYLE")
+    includes([
+      "**/*.kt",
+      "**/*.java",
+      "**/*.jsx"
+    ])
+    excludes([
+      'bin/**',
+      '**/*.properties',
+      '**/META-INF/**'
+    ])
+  }
+
   run {
     args = ['run', mainVerticleName,
             "--redeploy=$watchForChange",
@@ -160,7 +176,7 @@ tasks {
     dependsOn(shadowJar)
   }
 
-  task docker(type: Exec){
+  task docker(type: Exec) {
     workingDir = shadowJar.outputs.files.singleFile.parent
     description = "Builds a docker image based from the native image"
     commandLine = "docker"

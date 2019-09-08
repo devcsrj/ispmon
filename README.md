@@ -1,5 +1,7 @@
 # ISPMON
 
+![GitHub](https://img.shields.io/github/license/devcsrj/ispmon)
+
 Your persistent ISP bandwidth monitor.
 
 ![](img/home.png)
