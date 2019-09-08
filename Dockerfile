@@ -19,9 +19,10 @@ RUN gu install native-image && native-image \
 FROM alpine:3.10
 
 COPY --from=build-aot /project/ispmon /opt/ispmon
-COPY --from=build-aot /opt/graalvm-ce-19.2.0/jre/lib/amd64/libsunec.so /libsunec.so
-COPY --from=build-aot /opt/graalvm-ce-19.2.0/jre/lib/security/cacerts /cacerts
 
+ENV ISPMON_INTERVAL 15
+
+VOLUME /opt/results
 EXPOSE 5000
 
 ENTRYPOINT ["/opt/ispmon"]
