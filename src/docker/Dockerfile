@@ -16,13 +16,15 @@ RUN gu install native-image && native-image \
     -J-Djava.security.properties=java.security \
     -jar $JAR ispmon
 
-FROM alpine:3.10
+FROM busybox:glibc
 
 COPY --from=build-aot /project/ispmon /opt/ispmon
+COPY launcher.sh /opt/launcher.sh
 
 ENV ISPMON_INTERVAL 15
 
 VOLUME /opt/results
 EXPOSE 5000
 
-ENTRYPOINT ["/opt/ispmon"]
+WORKDIR "/opt"
+ENTRYPOINT ["sh", "launcher.sh"]

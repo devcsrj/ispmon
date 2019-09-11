@@ -154,7 +154,8 @@ tasks {
 
   docker {
     name "devcsrj/ispmon:${version}"
-    files shadowJar.outputs.files.singleFile, file("java.security")
+    dockerfile file("src/docker/Dockerfile")
+    files shadowJar.outputs.files.singleFile, file("java.security"), file("src/docker/launcher.sh")
     buildArgs([
       'JAR'    : shadowJar.outputs.files.singleFile.name,
       'JAR_SEC': "java.security"
