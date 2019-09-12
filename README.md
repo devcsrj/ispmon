@@ -20,17 +20,34 @@ they _might_ be throttling connections at **specified times of the day**.
 
 To track that down (and soon nag about it), I started this project.
 
-## Installing
+## Running
 
-The first version is still not released, so the only option is to build the project.
+You can download the jar from the [releases](https://github.com/devcsrj/ispmon/releases), and run it with:
 
-My end goal is to build a tiny docker image, and keep that running on my Raspberry Pi.
+```shell script
+$ java -jar ispmon-1.0.0.jar
+```
+
+Or, if you're like me, who loves running applications on [Docker](https://www.docker.com):
+
+```shell script
+$ docker run -p 5000:5000 -t -d --name ispmon devcsrj/ispmon:1.0.0
+```
+
+Configuration options below can be overridden with the `--env` argument. In addition, results 
+are stored in a directory called `results`. To persists the results across container restarts, 
+configure the volume. For example:
+
+```shell script
+docker run -p 5000:5000 -t -d --volume /path/in/host:/opt/results --name ispmon devcsrj/ispmon:1.0.0
+```
 
 ## Configuring
 
 The application reads the following from the environment variables:
 
-* `ISPMON_INTERVAL=15` - the interval at which, speed test should be done
+* `ISPMON_INTERVAL=15` - (minutes) the interval at which, speed test should be done
+* `ISPMON_DURATION=30` - (seconds) the maximum time to conduct speed tests
 * `ISPMON_PORT=5000` - the port to run the web server
 
 ---
@@ -39,22 +56,12 @@ The application reads the following from the environment variables:
 
 ### Prerequisites
 
-- [GraalVM 19.2.0](https://www.graalvm.org)
-- [Docker](https://docs.docker.com/install/)
+- JDK 8
 
 **Tip**: Use [sdkman](https://sdkman.io/install).
 
 ```shell script
 $ sdk install java 19.2.0-grl
-```
-
-> You may also use a plain old JDK8 distribution, but this means that 
-> you can only build `jar` files, and not a [native image](https://www.graalvm.org/docs/reference-manual/aot-compilation/).
-
-Finally, install `native-image`:
-
-```shell script
-$ gu install native-image
 ```
 
 ### Backend
@@ -81,52 +88,13 @@ This will start the webpack server at port `5001`.
 
 ### Building
 
-The [build configuration](https://www.graalvm.org/docs/reference-manual/aot-compilation/) is configured 
-to produce various artifacts.
-
-#### Vanilla
-
 To build a `jar`:
 
 ```shell script
 $ ./gradlew build
 ```
 
-You can then run this with `java -jar build/lib/ispmon-$version-fat.jar`.
-
-#### Binary
-
-But what we really want, is to build a binary. One that does not depend 
-on the massive JRE. To do that:
-
-```shell script
-$ ./gradlew nativeImage
-```
-
-This will produce an executable named `ispmon`. This can then be run with:
-
-```shell script
-$ ./ispmon
-```
-
-#### Docker
-
-On ARM architecture such as the Raspberry Pi, the native image won't work. So 
-our best option is to build a docker image, that wraps the native image. To build 
-that:
-
-```shell script
-$ ./gradlew docker
-```
-
-This will then produce a 46MB~ image, called `devcsrj/ispmon:1.0.0`, which you 
-can then run with:
-
-```shell script
-$ docker run -p 5000:5000 devcsrj/ispmon:1.0.0
-```
-
-> Note: There's still [an issue](http://github.com/devcsrj/ispmon/issues/1) with the produced docker image.
+You can then run this with `java -jar build/lib/ispmon-$version.jar`.
 
 ---
 
@@ -143,7 +111,8 @@ $ docker run -p 5000:5000 devcsrj/ispmon:1.0.0
 
     I also needed an excuse to play with new shiny things. This is my first project that involved:
     
-    - The ultra-fast and lean [Vertx](https://vertx.io)
+    - ~~The ultra-fast and lean Vertx~~
+    - The coroutine-powered [Ktor](https://ktor.io)
     - The well-loved [React](https://reactjs.org)
     - The smart bundler [webpack](https://webpack.js.org)
-    - and the bleeding edge [Graal Native Image](https://www.graalvm.org/docs/reference-manual/aot-compilation/)
+    - ~~and the bleeding edge Graal Native Image~~

@@ -23,8 +23,8 @@
  */
 package com.github.devcsrj.ookla
 
+import com.github.devcsrj.ispmon.Module
 import com.github.devcsrj.ispmon.Result
-import io.vertx.core.logging.LoggerFactory
 import java.net.HttpURLConnection
 import java.net.URI
 import java.time.Duration
@@ -45,7 +45,7 @@ class Speedtest(
 
   constructor(timeout: Duration) : this(URI.create("https://www.speedtest.net"), timeout)
 
-  private val logger = LoggerFactory.getLogger(Speedtest::class.java)
+  private val logger = Module.logger()
 
   override fun call(): Result {
     logger.debug("Loading speedtest settings...")

@@ -23,130 +23,71 @@
  */
 package com.github.devcsrj.ispmon
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.KotlinModule
-import com.github.devcsrj.ookla.Speedtest
-import io.vertx.config.ConfigRetriever
-import io.vertx.core.AbstractVerticle
-import io.vertx.core.Context
-import io.vertx.core.Future
-import io.vertx.core.Launcher
-import io.vertx.core.Vertx
-import io.vertx.core.http.HttpMethod
-import io.vertx.core.logging.LoggerFactory
-import io.vertx.ext.web.Router
-import io.vertx.ext.web.RoutingContext
-import io.vertx.ext.web.handler.StaticHandler
-import java.nio.file.Files
-import java.nio.file.Paths
-import java.time.Duration
+import io.ktor.application.Application
+import io.ktor.application.call
+import io.ktor.application.install
+import io.ktor.features.AutoHeadResponse
+import io.ktor.http.ContentType
+import io.ktor.http.content.resource
+import io.ktor.http.content.resources
+import io.ktor.http.content.static
+import io.ktor.response.respondTextWriter
+import io.ktor.routing.get
+import io.ktor.routing.routing
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.Executors
-import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
 
-class Ispmon : AbstractVerticle() {
+fun Application.main() {
 
-  private val logger = LoggerFactory.getLogger(Ispmon::class.java)
-  private val timeout = Duration.ofSeconds(15)
+  val logger = Module.logger()
+  val interval = Module.monitorInterval()
+  logger.info("Speedtest will be done every ${interval.toMinutes()} minute(s)")
 
-  private lateinit var repo: ResultRepository
-  private lateinit var mapper: ObjectMapper
-  private lateinit var scheduler: ScheduledExecutorService
+  val repo = Module.resultsRepository()
+  val speedtest = Module.speedtestTask(repo)
+  val scheduler = Executors.newSingleThreadScheduledExecutor()
+  scheduler.scheduleWithFixedDelay(
+    speedtest, 0L, interval.toMinutes(), TimeUnit.MINUTES
+  )
 
-  override fun init(vertx: Vertx,
-                    context: Context) {
-    super.init(vertx, context)
 
-    val resultsDir = Paths.get("results")
-    Files.createDirectories(resultsDir)
-    repo = DiskResultRepository(resultsDir)
+  install(AutoHeadResponse)
 
-    mapper = ObjectMapper()
-    mapper.registerModule(KotlinModule())
-  }
+  routing {
+    resource("/", "static/index.html")
+    static("static") {
+      resources("static")
+    }
+    get("results") {
+      val since = call.request.queryParameters["since"].let {
+        if (it == null)
+          LocalDate.now()
+        else {
+          val pattern = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+          LocalDate.parse(it, pattern)
+        }
+      }
+      val pattern = DateTimeFormatter.ofPattern("hh:mm a")
+      val results = repo.findSince(since)
+      val size = results.size
 
-  override fun stop() {
-    scheduler.shutdown()
-  }
-
-  override fun start(future: Future<Void>) {
-    val retriever = ConfigRetriever.create(vertx)
-    retriever.getConfig { config ->
-      val result = config.result()
-      config.map {
-        val port = result.getInteger("ISPMON_PORT", 5000)
-        startServer(port)
-
-        val monitorInterval = result.getLong("ISPMON_INTERVAL", 15L)
-        startScheduler(monitorInterval)
+      call.respondTextWriter(ContentType.parse("application/json")) {
+        write("[")
+        results.forEachIndexed { i, result ->
+          write("""
+            {
+              "timestamp" : "${result.timestamp.format(pattern)}",
+              "upload" : ${result.upload.value()},
+              "download" : ${result.download.value()}
+            }
+          """.trimIndent())
+          if (i < size - 1)
+            write(",\n")
+        }
+        write("]")
       }
     }
   }
-
-  private fun startScheduler(monitorInterval: Long) {
-    logger.info("Speedtest will be done every $monitorInterval minute(s)")
-    scheduler = Executors.newSingleThreadScheduledExecutor()
-    scheduler.scheduleWithFixedDelay(
-      speedtest(), 0L, monitorInterval, TimeUnit.MINUTES
-    )
-  }
-
-  private fun startServer(port: Int) {
-    logger.info("Server running at $port")
-    val router = Router.router(vertx).apply {
-      route(HttpMethod.GET, "/static/*")
-        .handler(StaticHandler.create("static"))
-      route(HttpMethod.GET, "/results")
-        .produces("application/json")
-        .handler { getResults(it) }
-      route(HttpMethod.GET, "/")
-        .produces("text/html")
-        .handler { it.response().sendFile("static/index.html") }
-    }
-
-    vertx.createHttpServer()
-      .requestHandler(router)
-      .listen(port)
-  }
-
-  private fun getResults(context: RoutingContext) {
-    val since = context.queryParam("since").let {
-      if (it.isEmpty())
-        LocalDate.now()
-      else {
-        val pattern = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-        LocalDate.parse(it.iterator().next(), pattern)
-      }
-    }
-    val pattern = DateTimeFormatter.ofPattern("hh:mm a")
-    val results = repo.findSince(since)
-      .map {
-        mapOf(
-          "timestamp" to it.timestamp.format(pattern),
-          "upload" to it.upload.value(),
-          "download" to it.download.value()
-        )
-      }
-    context
-      .response()
-      .end(mapper.writeValueAsString(results))
-  }
-
-  private fun speedtest(): Runnable {
-    return Runnable {
-      val test = Speedtest(timeout)
-      try {
-        val result = test.call()
-        repo.save(result)
-      } catch (e: Throwable) {
-        logger.error("Could not finish speedtest due to exception", e)
-      }
-    }
-  }
-}
-
-fun main() {
-  Launcher.executeCommand("run", Ispmon::class.java.name)
 }
