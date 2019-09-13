@@ -49,6 +49,7 @@ The application reads the following from the environment variables:
 * `ISPMON_INTERVAL=15` - (minutes) the interval at which, speed test should be done
 * `ISPMON_DURATION=30` - (seconds) the maximum time to conduct speed tests
 * `ISPMON_PORT=5000` - the port to run the web server
+* `TZ` - to set [the timezone](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)
 
 ---
 
